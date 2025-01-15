@@ -5,8 +5,9 @@
 #include <arpa/inet.h>
 
 #define PORT 8080
+#define BUFFER_SIZE 1024
 
-int initialize_connection(int* sock) {
+void initialize_connection(int* sock) {
 
     struct sockaddr_in serv_addr;
 
@@ -38,14 +39,25 @@ int main() {
 
 	int sock = 0;
     const char *message = "Hello from client";
-    char buffer[1024] = {0};
+    char buffer[BUFFER_SIZE] = {0};
 
 	initialize_connection(&sock);
-	printf("Connection established.\n");
+	printf("Connection established.\n\n");
 
-	// Read response from server
-	read(sock, buffer, sizeof(buffer));
-	printf("Response from server: %s\n", buffer);
+	while(1) {
+		char* request = NULL;
+		size_t len = 0;
+		printf("Enter request:\n");
+		getline(&request, &len, stdin);
+		int cr_ix = 0;
+		while(request[cr_ix] != '\n')
+			cr_ix++;
+		request[cr_ix] = 0;
+		send(sock, request, sizeof(request), 0);
+		printf("\nRequest transmitted.\n\n");
+		if(strcmp(request, "exit") == 0)
+			break;
+	}
 
     close(sock);
     return 0;

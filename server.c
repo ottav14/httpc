@@ -5,13 +5,14 @@
 #include <arpa/inet.h>
 
 #define PORT 8080
+#define BUFFER_SIZE 1024 
 
 void initialize_connection(int* sock) {
 
 	int opt = 1;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
-    char buffer[1024] = {0};
+    char buffer[BUFFER_SIZE] = {0};
 	
     // Create socket file descriptor
     if ((*sock = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
@@ -55,19 +56,31 @@ void initialize_connection(int* sock) {
     }
 }
 
+void handle_request(int sock) {
+	char request[BUFFER_SIZE];
+
+	read(sock, request, sizeof(request)-1);
+	printf("Request: \n%s\n\n", request);
+
+	if(strcmp(request, "exit") == 0) {
+		close(sock);
+		printf("Process terminated.\n");
+		exit(EXIT_SUCCESS);
+	}
+}
+
 int main() {
 
     int sock = 0;
-    const char* message = "test message";
-
 	initialize_connection(&sock);
+	printf("Connection established.\n\n");
 
 	// Send response to client
-	send(sock, message, strlen(message), 0);
-	printf("Data transmitted.\n");
+	while(1) {
+		handle_request(sock);
+	}
 
-    close(sock);
-	printf("Process terminated.\n");
     return 0;
+
 }
 
